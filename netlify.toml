@@ -10,7 +10,8 @@ ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsCiAgInByb2plY3RfaWQiOiAic29sYW5hLW1vbml0
 
 [functions]
   directory = "netlify/functions"
-
+  included_files = ["service-account.json"]
+  
 [functions.environment]
   # Small runtime variables – these are passed to the function
   TELEGRAM_TOKEN = "8630704017:AAGBB9OE2vLBJO4hI7av89Rn9cJAXB07sxA"
