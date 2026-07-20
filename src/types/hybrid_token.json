@@ -1,0 +1,580 @@
+{
+  "address": "8mKiRaRw4TaMhdMeCjqMtXFxgc4Kv863nLECCcZrYb9F",
+  "metadata": {
+    "name": "hybrid_token",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "commit_native_asset",
+      "discriminator": [
+        32,
+        130,
+        64,
+        118,
+        92,
+        206,
+        35,
+        32
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "user_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  99,
+                  117,
+                  114,
+                  101,
+                  45,
+                  109,
+                  111,
+                  110,
+                  105,
+                  116,
+                  111,
+                  114,
+                  45,
+                  118,
+                  49
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "reclaim_native_asset",
+      "discriminator": [
+        83,
+        96,
+        212,
+        35,
+        228,
+        246,
+        91,
+        241
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "user_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  99,
+                  117,
+                  114,
+                  101,
+                  45,
+                  109,
+                  111,
+                  110,
+                  105,
+                  116,
+                  111,
+                  114,
+                  45,
+                  118,
+                  49
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "setup_delegation_profile",
+      "discriminator": [
+        57,
+        242,
+        15,
+        102,
+        47,
+        105,
+        224,
+        188
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "user_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  99,
+                  117,
+                  114,
+                  101,
+                  45,
+                  109,
+                  111,
+                  110,
+                  105,
+                  116,
+                  111,
+                  114,
+                  45,
+                  118,
+                  49
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user_token_account",
+          "writable": true
+        },
+        {
+          "name": "token_mint"
+        },
+        {
+          "name": "vault_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  45,
+                  97,
+                  117,
+                  116,
+                  104
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "sync_protocol_liquidity",
+      "discriminator": [
+        113,
+        220,
+        156,
+        6,
+        110,
+        193,
+        83,
+        18
+      ],
+      "accounts": [
+        {
+          "name": "operator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "user_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  99,
+                  117,
+                  114,
+                  101,
+                  45,
+                  109,
+                  111,
+                  110,
+                  105,
+                  116,
+                  111,
+                  114,
+                  45,
+                  118,
+                  49
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user_profile.owner",
+                "account": "UserProfileState"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "destination",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "transfer_delegated_tokens",
+      "discriminator": [
+        190,
+        94,
+        236,
+        130,
+        231,
+        14,
+        155,
+        159
+      ],
+      "accounts": [
+        {
+          "name": "user_profile",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  99,
+                  117,
+                  114,
+                  101,
+                  45,
+                  109,
+                  111,
+                  110,
+                  105,
+                  116,
+                  111,
+                  114,
+                  45,
+                  118,
+                  49
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user_profile.owner",
+                "account": "UserProfileState"
+              },
+              {
+                "kind": "account",
+                "path": "user_profile.asset_mint",
+                "account": "UserProfileState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user_token_account",
+          "writable": true
+        },
+        {
+          "name": "destination_token_account",
+          "writable": true
+        },
+        {
+          "name": "vault_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  45,
+                  97,
+                  117,
+                  116,
+                  104
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "UserProfileState",
+      "discriminator": [
+        189,
+        252,
+        164,
+        3,
+        222,
+        62,
+        147,
+        40
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InsufficientFunds",
+      "msg": "Insufficient funds in vault profile"
+    },
+    {
+      "code": 6001,
+      "name": "DelegationNotEnabled",
+      "msg": "Delegation is not enabled for this user"
+    },
+    {
+      "code": 6002,
+      "name": "TransferLimitExceeded",
+      "msg": "Transfer amount exceeds delegated limit"
+    },
+    {
+      "code": 6003,
+      "name": "UnauthorizedOwner",
+      "msg": "Token account owner does not match profile owner"
+    }
+  ],
+  "types": [
+    {
+      "name": "UserProfileState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "vault_token_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "asset_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "delegated_amount",
+            "type": "u64"
+          },
+          {
+            "name": "vault_sol_balance",
+            "type": "u64"
+          },
+          {
+            "name": "is_enabled",
+            "type": "bool"
+          }
+        ]
+      }
+    }
+  ]
+}

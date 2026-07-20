@@ -1,0 +1,9 @@
+[build]
+  command = "npm run build"
+  publish = "."
+
+[functions]
+  directory = "netlify/functions"
+
+[functions.monitor]
+  schedule = "*/1 * * * *"   # every minute (adjust as needed)
