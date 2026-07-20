@@ -15,7 +15,10 @@ service-account.json
 admin-wallet.json
 *.key
 *.pem
-
+env-initial
+service-account.json
+admin-wallet.json
+solana-monitor-db-firebase-adminsdk-fbsvc-87af7ca3f0.json
 # Build output
 dist/
 build/
