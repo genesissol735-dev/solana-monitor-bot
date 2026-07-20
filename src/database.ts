@@ -1,4 +1,4 @@
-import { initializeApp, getApps } from 'firebase-admin/app';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from './utils.js';
 import { DetectionEvent, WalletInfo, BalanceState, DelegationState } from './types.js';
@@ -6,13 +6,24 @@ import { DetectionEvent, WalletInfo, BalanceState, DelegationState } from './typ
 export class AgentDatabase {
   private db: FirebaseFirestore.Firestore;
 
-  constructor(_dbPath?: string) { // optional, ignored
+  constructor(_dbPath?: string) {
     if (!getApps().length) {
       try {
-        initializeApp();
-        logger.info("🔥 Connected to Firebase Firestore");
+        // Try to load credentials from FIREBASE_CREDENTIALS env var (Netlify)
+        if (process.env.FIREBASE_CREDENTIALS) {
+          const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
+          initializeApp({
+            credential: cert(serviceAccount)
+          });
+          logger.info("🔥 Firebase initialized from FIREBASE_CREDENTIALS env var");
+        } else {
+          // Fallback: use GOOGLE_APPLICATION_CREDENTIALS (local development)
+          initializeApp();
+          logger.info("🔥 Firebase initialized from GOOGLE_APPLICATION_CREDENTIALS");
+        }
       } catch (error) {
         logger.error("❌ Firebase Init Failed:", error);
+        throw error;
       }
     }
     this.db = getFirestore();
