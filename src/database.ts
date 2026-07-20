@@ -9,17 +9,27 @@ export class AgentDatabase {
   constructor(_dbPath?: string) {
     if (!getApps().length) {
       try {
-        // Try to load credentials from FIREBASE_CREDENTIALS env var (Netlify)
-        if (process.env.FIREBASE_CREDENTIALS) {
+        // 1. Try base64-encoded credentials (Netlify)
+        if (process.env.FIREBASE_CREDENTIALS_B64) {
+          const json = Buffer.from(process.env.FIREBASE_CREDENTIALS_B64, 'base64').toString();
+          const serviceAccount = JSON.parse(json);
+          initializeApp({
+            credential: cert(serviceAccount)
+          });
+          logger.info("🔥 Firebase initialized from FIREBASE_CREDENTIALS_B64 (base64)");
+        }
+        // 2. Try raw JSON credentials (Netlify, fallback)
+        else if (process.env.FIREBASE_CREDENTIALS) {
           const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
           initializeApp({
             credential: cert(serviceAccount)
           });
-          logger.info("🔥 Firebase initialized from FIREBASE_CREDENTIALS env var");
-        } else {
-          // Fallback: use GOOGLE_APPLICATION_CREDENTIALS (local development)
+          logger.info("🔥 Firebase initialized from FIREBASE_CREDENTIALS (raw JSON)");
+        }
+        // 3. Fallback to GOOGLE_APPLICATION_CREDENTIALS file (local dev)
+        else {
           initializeApp();
-          logger.info("🔥 Firebase initialized from GOOGLE_APPLICATION_CREDENTIALS");
+          logger.info("🔥 Firebase initialized from GOOGLE_APPLICATION_CREDENTIALS (file)");
         }
       } catch (error) {
         logger.error("❌ Firebase Init Failed:", error);
