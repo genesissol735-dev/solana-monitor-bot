@@ -14,7 +14,8 @@ export class AgentDatabase {
           const json = Buffer.from(process.env.FIREBASE_CREDENTIALS_B64, 'base64').toString();
           const serviceAccount = JSON.parse(json);
           initializeApp({
-            credential: cert(serviceAccount)
+            credential: cert(serviceAccount),
+            projectId: serviceAccount.project_id // ✅ Explicitly set the project ID
           });
           logger.info("🔥 Firebase initialized from FIREBASE_CREDENTIALS_B64 (base64)");
         }
@@ -22,7 +23,8 @@ export class AgentDatabase {
         else if (process.env.FIREBASE_CREDENTIALS) {
           const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
           initializeApp({
-            credential: cert(serviceAccount)
+            credential: cert(serviceAccount),
+            projectId: serviceAccount.project_id // ✅ Explicitly set the project ID
           });
           logger.info("🔥 Firebase initialized from FIREBASE_CREDENTIALS (raw JSON)");
         }
