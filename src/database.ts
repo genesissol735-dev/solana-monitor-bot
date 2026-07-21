@@ -3,18 +3,32 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from './utils.js';
 import { DetectionEvent, WalletInfo, BalanceState, DelegationState } from './types.js';
 
-
 export class AgentDatabase {
   private db: FirebaseFirestore.Firestore;
 
   constructor(_dbPath?: string) {
     if (!getApps().length) {
       try {
-        // The Admin SDK will automatically load credentials from:
-        // - GOOGLE_APPLICATION_CREDENTIALS (file) on Netlify
-        // - Or the default environment on local dev
-        initializeApp();
-        logger.info("🔥 Firebase initialized successfully");
+        // 1. Try base64-encoded credentials (most reliable on Netlify)
+        if (process.env.FIREBASE_CREDENTIALS_B64) {
+          const json = Buffer.from(process.env.FIREBASE_CREDENTIALS_B64, 'base64').toString();
+          const serviceAccount = JSON.parse(json);
+          initializeApp({
+            credential: cert(serviceAccount),
+            projectId: serviceAccount.project_id
+          });
+          logger.info("🔥 Firebase initialized from FIREBASE_CREDENTIALS_B64");
+        }
+        // 2. Fallback to file (for local dev or if base64 not set)
+        else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+          initializeApp();
+          logger.info("🔥 Firebase initialized from GOOGLE_APPLICATION_CREDENTIALS file");
+        }
+        // 3. Last resort – try without credentials (only works in some environments)
+        else {
+          initializeApp();
+          logger.warn("⚠️ Firebase initialized without explicit credentials – may fail");
+        }
       } catch (error) {
         logger.error("❌ Firebase Init Failed:", error);
         throw error;
