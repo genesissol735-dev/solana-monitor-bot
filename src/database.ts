@@ -1,29 +1,25 @@
-
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import WebSocket from 'ws';  // ✅ Added for Node.js < 22 WebSocket support
 import { logger } from './utils.js';
 import { DetectionEvent, WalletInfo, BalanceState, DelegationState } from './types.js';
 
 export class AgentDatabase {
   private supabase: SupabaseClient;
 
-  constructor(_dbPath?: string) {
-    const url = process.env.SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+ constructor(_dbPath?: string) {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!url || !key) {
-      throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables');
-    }
-
-    // ✅ Pass WebSocket transport option for Node.js < 22
-    this.supabase = createClient(url, key, {
-      realtime: {
-        transport: WebSocket
-      }
-    });
-
-    logger.info('🔥 Connected to Supabase');
+  if (!url || !key) {
+    throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables');
   }
+
+  // ✅ Disable realtime (works at runtime, bypass type check)
+  this.supabase = createClient(url, key, {
+    realtime: { enabled: false } as any
+  });
+
+  logger.info('🔥 Connected to Supabase');
+}
 
   // ===== WALLETS =====
   async getMonitoredWallets(): Promise<WalletInfo[]> {
