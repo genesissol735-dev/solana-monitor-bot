@@ -15,18 +15,19 @@
     "@coral-xyz/anchor": "^0.32.1",
     "@solana/spl-token": "^0.3.11",
     "@solana/web3.js": "^1.98.4",
+    "@supabase/supabase-js": "^2.109.0",
+    "@types/ws": "^8.18.1",
     "axios": "^1.13.2",
     "bn.js": "^5.2.2",
     "cors": "^2.8.5",
     "discord.js": "^14.24.2",
     "dotenv": "^16.6.1",
     "express": "^5.1.0",
-    "firebase-admin": "^13.6.0",
     "node-telegram-bot-api": "^1.1.2",
     "p-queue": "^7.4.1",
     "p-retry": "^6.2.1",
     "undici": "^7.28.0",
-    "ws": "^8.18.3"
+    "ws": "^8.21.1"
   },
   "devDependencies": {
     "@types/bn.js": "^5.2.0",
