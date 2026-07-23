@@ -4,12 +4,3 @@
 
 [functions]
   directory = "netlify/functions"
-  # No included_files needed now
-
-[functions.environment]
-  SUPABASE_URL = "https://nrzotahlfmurpufbnrxm.supabase.co"
-  SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yem90YWhsZm11cnB1ZmJucnhtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDY3NzE2NSwiZXhwIjoyMTAwMjUzMTY1fQ.35aH-LzHCqoIRk5caQC_-f0Ka3dKfw0p80AQsbvk3rU"
-  TELEGRAM_TOKEN = "8630704017:AAGBB9OE2vLBJO4hI7av89Rn9cJAXB07sxA"
-  TELEGRAM_ADMIN_USER_IDS = "1797467142,8223123813"
-  SOLANA_RPC_URL = "https://proportionate-nameless-vineyard.solana-mainnet.quiknode.pro/44a4a6a9519fc075cf2907cbe4a36d8286cfda4d/"
-  ADMIN_WALLET_B64 = "WzE0MiwxODQsMTU0LDEwMSwyMTgsNDksMTMyLDIyMSwxNjUsMjQ0LDI0OSwzNCwxNTMsMTk0LDQ2LDMzLDQ2LDkwLDIwNCwyNDgsMjMsMjAyLDksMzYsMTc1LDEzMiwyMCw3Niw3MCwzOCwxMDMsMjM4LDI0OSwyMzgsOTMsNDQsMjM1LDExOCwyMTIsNzUsMTczLDEzMSwzMCwzMSwxNDAsOTIsMjQ5LDQ0LDIwMSwxMTQsNjMsNzUsMTM2LDg3LDY2LDYxLDEyMiwxNjUsNTIsNSwzOCwxNzcsMTIyLDExOF0K"
